@@ -318,10 +318,11 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8080, help="Port to use")
     parser.add_argument("--dev", action='store_true', help="Development mode")
     parser.add_argument("--pretrained_model", type=str, help='for development')
+    parser.add_argument("--share", action="store_true", help="To create a public link")
     args = parser.parse_args()
 
     if args.aggressive_offload:
         args.offload = True
 
     demo = create_demo(args, args.name, args.device, args.offload, args.aggressive_offload)
-    demo.launch(server_name='0.0.0.0', server_port=args.port)
+    demo.launch(server_name='0.0.0.0', server_port=args.port, share=args.share)
