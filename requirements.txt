@@ -3,8 +3,8 @@ torchvision==0.15.2
 diffusers==0.25.0
 transformers==4.43.3
 fastapi==0.95.2
-pydantic==1.10.12
-gradio>=4.0.0
+pydantic
+gradio
 opencv-python
 httpx==0.23.3
 timm

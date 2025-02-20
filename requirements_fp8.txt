@@ -4,8 +4,8 @@ diffusers==0.30.0
 transformers==4.43.3
 optimum-quanto==0.2.4
 fastapi==0.95.2
-pydantic==1.10.12
-gradio>=4.0.0
+pydantic
+gradio
 opencv-python
 httpx==0.23.3
 timm
