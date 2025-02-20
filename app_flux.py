@@ -207,9 +207,9 @@ def create_demo(args, model_name: str, device: str = "cuda" if torch.cuda.is_ava
 
                 width = gr.Slider(256, 1536, 896, step=16, label="Width")
                 height = gr.Slider(256, 1536, 1152, step=16, label="Height")
-                num_steps = gr.Slider(1, 20, 20, step=1, label="Number of steps")
+                num_steps = gr.Slider(1, 100, 20, step=1, label="Number of steps")
                 start_step = gr.Slider(0, 10, 0, step=1, label="timestep to start inserting ID")
-                guidance = gr.Slider(1.0, 10.0, 4, step=0.1, label="Guidance")
+                guidance = gr.Slider(0.0, 10.0, 4, step=0.1, label="Guidance")
                 seed = gr.Textbox(-1, label="Seed (-1 for random)")
                 max_sequence_length = gr.Slider(128, 512, 128, step=128,
                                                 label="max_sequence_length for prompt (T5), small will be faster")

@@ -146,7 +146,7 @@ def run(*args):
 _HEADER_ = '''
 <h2><b>Official Gradio Demo</b></h2><h2><a href='https://github.com/ToTheBeginning/PuLID' target='_blank'><b>PuLID: Pure and Lightning ID Customization via Contrastive Alignment</b></a></h2>
 
-**PuLID** is a tuning-free ID customization approach. PuLID maintains high ID fidelity while effectively reducing interference with the original model’s behavior.
+**PuLID** is a tuning-free ID customization approach. PuLID maintains high ID fidelity while effectively reducing interference with the original model's behavior.
 
 Code: <a href='https://github.com/ToTheBeginning/PuLID' target='_blank'>GitHub</a>. Paper: <a href='https://arxiv.org/abs/2404.16022' target='_blank'>ArXiv</a>.
 
@@ -180,12 +180,12 @@ with gr.Blocks(title="PuLID", css=".gr-box {border-color: #8136e2}") as demo:
             scale = gr.Slider(
                 label="CFG (recommend 2 for lightning model and 7 for non-accelerated model)",
                 value=default_cfg,
-                minimum=1,
+                minimum=0,
                 maximum=10,
                 step=0.1,
             )
             seed = gr.Textbox(-1, label="Seed (-1 for random)")
-            steps = gr.Slider(label="Steps", value=default_steps, minimum=1, maximum=30, step=1)
+            steps = gr.Slider(label="Steps", value=default_steps, minimum=1, maximum=100, step=1)
             with gr.Row():
                 H = gr.Slider(label="Height", value=1152, minimum=512, maximum=2024, step=64)
                 W = gr.Slider(label="Width", value=896, minimum=512, maximum=2024, step=64)
