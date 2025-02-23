@@ -19,7 +19,7 @@ from torchvision.transforms.functional import normalize, resize
 from eva_clip import create_model_and_transforms
 from eva_clip.constants import OPENAI_DATASET_MEAN, OPENAI_DATASET_STD
 from pulid.encoders_transformer import IDFormer
-from pulid.utils import is_torch2_available, sample_dpmpp_2m, sample_dpmpp_sde
+from pulid.utils import is_torch2_available, sample_dpmpp_2m, sample_dpmpp_sde, sample_dpmpp_2m_sde_karras
 
 if is_torch2_available():
     from pulid.attention_processor import AttnProcessor2_0 as AttnProcessor
@@ -29,7 +29,7 @@ else:
 
 
 class PuLIDPipeline:
-    def __init__(self, sdxl_repo='Lykon/dreamshaper-xl-lightning', sampler='dpmpp_sde', *args, **kwargs):
+    def __init__(self, sdxl_repo='Lykon/dreamshaper-xl-lightning', sampler='dpmpp_2m_sde_k', *args, **kwargs):
         super().__init__()
         self.device = 'cuda'
 
@@ -103,6 +103,8 @@ class PuLIDPipeline:
             self.sampler = sample_dpmpp_sde
         elif sampler == 'dpmpp_2m':
             self.sampler = sample_dpmpp_2m
+        elif sampler == 'dpmpp_2m_sde_k':
+            self.sampler = sample_dpmpp_2m_sde_karras
         else:
             raise NotImplementedError(f'sampler {sampler} not implemented')
 

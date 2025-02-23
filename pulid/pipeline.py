@@ -52,8 +52,18 @@ class PuLIDPipeline:
 
         # scheduler
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
-            self.pipe.scheduler.config, timestep_spacing="trailing"
+            self.pipe.scheduler.config,
+            algorithm_type="sde-dpmsolver++",
+            use_karras_sigmas=True,
+            timestep_spacing="trailing"
         )
+
+        # Add scheduler parameters
+        self.scheduler_params = {
+            'rho': 7.0,
+            'eta': 1.0,
+            's_noise': 1.0,
+        }
 
         # ID adapters
         self.id_adapter = IDEncoder().to(self.device)
@@ -213,7 +223,7 @@ class PuLIDPipeline:
         # return id_embedding
         return torch.cat((uncond_id_embedding, id_embedding), dim=0)
 
-    def inference(self, prompt, size, prompt_n='', image_embedding=None, id_scale=1.0, guidance_scale=1.2, steps=4):
+    def inference(self, prompt, size, prompt_n='', image_embedding=None, id_scale=1.0, guidance_scale=1.2, steps=25):
         images = self.pipe(
             prompt=prompt,
             negative_prompt=prompt_n,
@@ -223,6 +233,8 @@ class PuLIDPipeline:
             num_inference_steps=steps,
             guidance_scale=guidance_scale,
             cross_attention_kwargs={'id_embedding': image_embedding, 'id_scale': id_scale},
+            eta=self.scheduler_params['eta'],
+            s_noise=self.scheduler_params['s_noise'],
         ).images
 
         return images

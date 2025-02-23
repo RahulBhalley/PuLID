@@ -335,3 +335,72 @@ def sample_dpmpp_sde(
             x = (sigma_fn(t_next_) / sigma_fn(t)) * x - (t - t_next_).expm1() * denoised_d
             x = x + noise_sampler(sigma_fn(t), sigma_fn(t_next)) * s_noise * su
     return x
+
+
+def get_sigmas_karras(n_steps, sigma_min, sigma_max, rho=7., device='cpu'):
+    """Constructs the noise schedule of Karras et al. (2022)."""
+    ramp = torch.linspace(0, 1, n_steps, device=device)
+    min_inv_rho = sigma_min ** (1 / rho)
+    max_inv_rho = sigma_max ** (1 / rho)
+    sigmas = (max_inv_rho + ramp * (min_inv_rho - max_inv_rho)) ** rho
+    return torch.cat([sigmas, sigmas.new_zeros([1])])  # add zero for final step
+
+
+@torch.no_grad()
+def sample_dpmpp_2m_sde_karras(
+    model,
+    x,
+    steps,
+    sigma_min,
+    sigma_max,
+    rho=7.,
+    eta=1.,
+    s_noise=1.,
+    noise_sampler=None,
+    extra_args=None,
+    callback=None,
+    disable=None,
+):
+    """DPM++ (2M) SDE with Karras scheduler."""
+    extra_args = {} if extra_args is None else extra_args
+    sigmas = get_sigmas_karras(steps, sigma_min, sigma_max, rho, device=x.device)
+    
+    # Setup noise samplers
+    if noise_sampler is None:
+        noise_sampler = BrownianTreeNoiseSampler(x, sigma_min, sigma_max, seed=extra_args.get('seed', None), cpu=False)
+    
+    s_in = x.new_ones([x.shape[0]])
+    sigma_fn = lambda t: t.neg().exp()
+    t_fn = lambda sigma: sigma.log().neg()
+    old_denoised = None
+
+    for i in trange(len(sigmas) - 1, disable=disable):
+        denoised = model(x, sigmas[i] * s_in, **extra_args)
+        if callback is not None:
+            callback({'x': x, 'i': i, 'sigma': sigmas[i], 'sigma_hat': sigmas[i], 'denoised': denoised})
+        
+        t, t_next = t_fn(sigmas[i]), t_fn(sigmas[i + 1])
+        h = t_next - t
+
+        # First step or last step
+        if old_denoised is None or sigmas[i + 1] == 0:
+            # Euler step
+            x = (sigma_fn(t_next) / sigma_fn(t)) * x - (-h).expm1() * denoised
+            if sigmas[i + 1] != 0:
+                # Add noise if not the final step
+                noise = noise_sampler(sigma_fn(t), sigma_fn(t_next))
+                x = x + noise * s_noise * (sigmas[i + 1] / sigmas[i])
+        else:
+            # 2M step
+            h_last = t - t_fn(sigmas[i - 1])
+            r = h_last / h
+            denoised_d = (1 + 1 / (2 * r)) * denoised - (1 / (2 * r)) * old_denoised
+            x = (sigma_fn(t_next) / sigma_fn(t)) * x - (-h).expm1() * denoised_d
+            if sigmas[i + 1] != 0:
+                # Add noise if not the final step
+                noise = noise_sampler(sigma_fn(t), sigma_fn(t_next))
+                x = x + noise * s_noise * (sigmas[i + 1] / sigmas[i])
+
+        old_denoised = denoised
+
+    return x
